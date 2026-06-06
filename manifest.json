@@ -1,0 +1,15 @@
+{
+  "name": "Field Calc",
+  "short_name": "Field Calc",
+  "description": "Jobsite field calculator — tape, slope, area, concrete, stairs, triangle, board feet, and unit convert. Works offline.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#303038",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

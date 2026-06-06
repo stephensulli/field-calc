@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Field Calc">
+<meta name="theme-color" content="#303038">
+<title>Field Calc</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23303038'/%3E%3Cpath d='M16 44 V20 H22 V38 H40 V44 Z' fill='%23D46A2C'/%3E%3Crect x='26' y='14' width='4' height='8' fill='%23B8B8C0'/%3E%3Crect x='34' y='14' width='4' height='8' fill='%23B8B8C0'/%3E%3Crect x='44' y='26' width='8' height='4' fill='%23B8B8C0'/%3E%3Crect x='44' y='34' width='8' height='4' fill='%23B8B8C0'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#ffffff;
+    --tint:#f5f5f7;
+    --panel:#ffffff;
+    --focus:#ffffff;
+    --ink:#303038;
+    --ink2:#212526;
+    --body:#474847;
+    --muted:#8b8b93;
+    --border:#D0D0D8;
+    --border2:#B8B8C0;
+    --copper:#D46A2C;
+    --copper-dim:#b9551d;
+    --steel:#3D6B8E;
+  }
+  html[data-theme="dark"]{
+    --bg:#1b1b1f;
+    --tint:#26262c;
+    --panel:#212126;
+    --focus:#2c2c33;
+    --ink:#f1eee7;
+    --ink2:#ffffff;
+    --body:#cfcdd4;
+    --muted:#9a9aa2;
+    --border:#3a3a42;
+    --border2:#4a4a53;
+    --copper:#e07a3a;
+    --copper-dim:#c5601f;
+    --steel:#6f9cc0;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--body);}
+  body{
+    font-family:"Gotham","Calibri",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    min-height:100vh;
+    -webkit-text-size-adjust:100%;
+  }
+  header{
+    padding:18px 18px 12px;
+    border-bottom:3px solid var(--copper);
+    display:flex;align-items:baseline;gap:10px;
+    background:var(--panel);
+  }
+  header h1{
+    font-family:Georgia,"Trajan Pro",serif;
+    font-size:22px;margin:0;letter-spacing:1px;color:var(--ink2);font-weight:700;
+  }
+  header h1 .dot{color:var(--copper);}
+  .hgroup{margin-left:auto;display:flex;align-items:center;gap:12px;}
+  .theme-btn{
+    background:none;border:1px solid var(--border);color:var(--ink);border-radius:7px;
+    font-size:15px;padding:5px 9px;cursor:pointer;line-height:1;
+  }
+  header .sub{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;}
+  nav{
+    display:flex;overflow-x:auto;border-bottom:1px solid var(--border);
+    scrollbar-width:none;background:var(--panel);position:sticky;top:0;z-index:5;
+  }
+  nav::-webkit-scrollbar{display:none;}
+  nav button{
+    flex:0 0 auto;background:none;border:none;color:var(--muted);
+    font-family:inherit;font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:600;
+    padding:13px 15px;border-bottom:2px solid transparent;cursor:pointer;
+  }
+  nav button.active{color:var(--copper);border-bottom-color:var(--copper);}
+  main{padding:16px 16px 60px;max-width:560px;margin:0 auto;}
+  .panel{display:none;}
+  .panel.active{display:block;animation:fade .2s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .card{
+    background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(48,48,56,.06);
+  }
+  .card h2{
+    font-family:Georgia,serif;
+    font-size:15px;letter-spacing:.3px;margin:0 0 14px;
+    color:var(--steel);font-weight:700;
+  }
+  .row{display:flex;gap:10px;margin-bottom:11px;}
+  .row .field{flex:1;}
+  label{display:block;font-size:11px;color:var(--muted);letter-spacing:.5px;margin-bottom:5px;text-transform:uppercase;font-weight:600;}
+  input,select{
+    width:100%;background:var(--tint);border:1px solid var(--border);border-radius:8px;
+    color:var(--ink2);font-family:inherit;font-size:17px;padding:12px 12px;
+    appearance:none;
+  }
+  input:focus,select:focus{outline:none;border-color:var(--steel);background:var(--focus);}
+  select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path fill='%238b8b93' d='M2 4l4 4 4-4'/></svg>");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+  .out{
+    background:var(--tint);border:1px solid var(--border);border-left:3px solid var(--copper);
+    border-radius:8px;padding:14px;margin-top:6px;
+  }
+  .out .line{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;gap:10px;}
+  .out .line .k{font-size:12px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;font-weight:600;}
+  .out .line .v{font-size:20px;font-weight:700;color:var(--ink2);text-align:right;}
+  .out .line.big .v{font-size:26px;color:var(--copper);}
+  .out .line.flag .v{font-size:13px;font-weight:700;}
+  .out .line.flag .v.ok{color:var(--steel);}
+  .out .line.flag .v.bad{color:var(--copper);}
+  .copyable{cursor:pointer;}
+  .copyable:active{opacity:.5;}
+  .marklist{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+  .marklist span{font-size:12px;background:var(--tint);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--ink2);font-weight:600;}
+  .hint{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;}
+  .seg{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:11px;}
+  .seg button{
+    flex:1;background:var(--tint);border:none;color:var(--muted);font-family:inherit;
+    font-size:12px;letter-spacing:.5px;padding:11px 4px;cursor:pointer;font-weight:600;
+  }
+  .seg button.active{background:var(--steel);color:#fff;font-weight:700;}
+  .or{text-align:center;color:var(--muted);font-size:11px;letter-spacing:1px;margin:4px 0 11px;}
+  .toast{
+    position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink2);color:#fff;font-size:13px;font-weight:600;padding:10px 18px;border-radius:20px;
+    opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:20;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  footer{text-align:center;color:var(--muted);font-size:10px;letter-spacing:1px;padding:0 0 24px;text-transform:uppercase;}
+  .tape-display{
+    background:var(--tint);border:1px solid var(--border);border-left:3px solid var(--copper);
+    border-radius:8px;padding:16px;margin-bottom:14px;text-align:right;
+  }
+  .tape-running{font-size:34px;font-weight:700;color:var(--copper);line-height:1.1;word-break:break-word;}
+  .tape-sub{font-size:13px;color:var(--muted);margin-top:6px;}
+  .tape-ops{display:flex;gap:8px;margin-top:10px;}
+  .tape-ops button{
+    flex:1;background:var(--steel);color:#fff;border:none;border-radius:8px;
+    font-family:inherit;font-size:14px;font-weight:700;padding:14px 4px;cursor:pointer;letter-spacing:.5px;
+  }
+  .tape-ops button:active{background:#2f5066;}
+  .tape-ops button.ghost{background:var(--tint);color:var(--muted);border:1px solid var(--border);font-weight:600;}
+  .tape-log{margin-top:14px;display:flex;flex-direction:column;gap:4px;}
+  .tape-log .entry{
+    display:flex;justify-content:space-between;font-size:13px;color:var(--ink2);
+    padding:7px 10px;background:var(--tint);border-radius:6px;border-left:2px solid var(--border2);
+  }
+  .tape-log .entry .op{color:var(--copper);font-weight:700;width:22px;}
+  .tape-log .entry .amt{flex:1;}
+  .tape-log .entry .sub{color:var(--muted);font-size:11px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Field<span class="dot">.</span>Calc</h1>
+  <div class="hgroup">
+    <button id="theme_btn" class="theme-btn" aria-label="Toggle dark mode">&#9790;</button>
+    <span class="sub" id="clock"></span>
+  </div>
+</header>
+<nav id="nav"></nav>
+<main>
+
+<!-- TAPE -->
+<section class="panel" data-tab="tape">
+  <div class="card">
+    <h2>Feet-Inch Tape</h2>
+    <div class="tape-display">
+      <div class="tape-running copyable" id="tp_running" title="Tap to copy">0"</div>
+      <div class="tape-sub" id="tp_sub">0' 0"  ·  0.000'</div>
+    </div>
+    <label>Enter a dimension (e.g. 12' 6 1/2" or 6 1/2" or 150.5")</label>
+    <input type="text" inputmode="text" id="tp_entry" placeholder="12' 6 1/2&quot;" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="tape-ops">
+      <button data-op="+">+ Add</button>
+      <button data-op="-">&minus; Sub</button>
+      <button data-op="*">&times; Mult</button>
+      <button data-op="/">&divide; Div</button>
+    </div>
+    <div class="tape-ops">
+      <button data-op="C" class="ghost">Clear</button>
+      <button data-op="back" class="ghost">Undo last</button>
+    </div>
+    <div class="tape-log" id="tp_log"></div>
+    <div class="hint">&times; and &divide; use a plain number (no units): enter <b>3</b> then tap &times;. Results snap to 1/16". Type as it reads on the drawing; feet, inches, and fractions are all optional.</div>
+  </div>
+
+  <div class="card">
+    <h2>Decimal &rarr; Fraction</h2>
+    <div class="row">
+      <div class="field"><label>Decimal feet OR inches</label><input type="number" inputmode="decimal" id="df_val"></div>
+      <div class="field"><label>Input is</label>
+        <select id="df_unit"><option value="ft">Feet</option><option value="in">Inches</option></select>
+      </div>
+    </div>
+    <div class="out">
+      <div class="line big"><span class="k">Ft-in-fraction</span><span class="v copyable" id="df_out">&mdash;</span></div>
+      <div class="line"><span class="k">Total inches</span><span class="v copyable" id="df_in">&mdash;</span></div>
+    </div>
+    <div class="hint">12.541' or 150.5" both work. Snaps to nearest 1/16".</div>
+  </div>
+</section>
+
+<!-- SLOPE -->
+<section class="panel" data-tab="slope">
+  <div class="card">
+    <h2>Slope / Grade</h2>
+    <label style="margin-bottom:8px">Enter rise &amp; run, OR type a percent. Either fills the rest.</label>
+    <div class="row">
+      <div class="field"><label>Rise</label><input type="text" inputmode="text" id="sl_rise" placeholder="2&quot; or 0.5'" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+      <div class="field"><label>Run</label><input type="text" inputmode="text" id="sl_run" placeholder="20' or 10 ft" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    </div>
+    <div class="or">&mdash; OR &mdash;</div>
+    <div class="row">
+      <div class="field"><label>Percent (%)</label><input type="number" inputmode="decimal" id="sl_pct" placeholder="2"></div>
+    </div>
+    <div class="out">
+      <div class="line big"><span class="k">Slope</span><span class="v copyable" id="sl_o_pct">&mdash;</span></div>
+      <div class="line"><span class="k">Ratio</span><span class="v copyable" id="sl_o_ratio">&mdash;</span></div>
+      <div class="line"><span class="k">Degrees</span><span class="v copyable" id="sl_o_deg">&mdash;</span></div>
+      <div class="line"><span class="k">Roof pitch</span><span class="v copyable" id="sl_o_pitch">&mdash;</span></div>
+    </div>
+    <div class="hint">Rise/run accept feet-inch-fraction. Percent is rise &divide; run &times; 100. Ratio is 1:x. Pitch is rise per 12 of run.</div>
+  </div>
+</section>
+
+<!-- AREA -->
+<section class="panel" data-tab="area">
+  <div class="card">
+    <h2>Area &amp; Coverage</h2>
+    <div class="row">
+      <div class="field"><label>Length (ft)</label><input type="number" inputmode="decimal" id="a_l"></div>
+      <div class="field"><label>Width (ft)</label><input type="number" inputmode="decimal" id="a_w"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Coverage per unit (sq ft)</label><input type="number" inputmode="decimal" id="a_cov" placeholder="e.g. 32"></div>
+      <div class="field"><label>Waste %</label><input type="number" inputmode="decimal" id="a_waste" value="10"></div>
+    </div>
+    <div class="out">
+      <div class="line big"><span class="k">Area</span><span class="v copyable" id="a_sf">&mdash;</span></div>
+      <div class="line"><span class="k">Area + waste</span><span class="v copyable" id="a_sfw">&mdash;</span></div>
+      <div class="line"><span class="k">Squares (100 sf)</span><span class="v copyable" id="a_sq">&mdash;</span></div>
+      <div class="line"><span class="k">Units needed</span><span class="v copyable" id="a_units">&mdash;</span></div>
+    </div>
+    <div class="hint">Coverage per unit: box of tile, bundle of shingles, sheet of board, etc. Leave blank to skip.</div>
+  </div>
+</section>
+
+<!-- CONCRETE -->
+<section class="panel" data-tab="concrete">
+  <div class="card">
+    <h2>Concrete Volume</h2>
+    <div class="seg" id="cc_seg">
+      <button data-mode="slab" class="active">Slab / Footing</button>
+      <button data-mode="column">Round Column</button>
+    </div>
+    <div id="cc_slab">
+      <div class="row">
+        <div class="field"><label>Length (ft)</label><input type="number" inputmode="decimal" id="cc_l"></div>
+        <div class="field"><label>Width (ft)</label><input type="number" inputmode="decimal" id="cc_w"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Thickness (in)</label><input type="number" inputmode="decimal" id="cc_t" placeholder="4"></div>
+        <div class="field"><label>Quantity</label><input type="number" inputmode="decimal" id="cc_qty" value="1"></div>
+      </div>
+    </div>
+    <div id="cc_column" style="display:none">
+      <div class="row">
+        <div class="field"><label>Diameter (in)</label><input type="number" inputmode="decimal" id="cc_dia" placeholder="12"></div>
+        <div class="field"><label>Height (ft)</label><input type="number" inputmode="decimal" id="cc_h"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Quantity</label><input type="number" inputmode="decimal" id="cc_cqty" value="1"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Waste %</label><input type="number" inputmode="decimal" id="cc_waste" value="10"></div>
+    </div>
+    <div class="out">
+      <div class="line big"><span class="k">Cubic yards</span><span class="v copyable" id="cc_cy">&mdash;</span></div>
+      <div class="line"><span class="k">Cubic feet</span><span class="v copyable" id="cc_cf">&mdash;</span></div>
+      <div class="line"><span class="k">60 lb bags</span><span class="v copyable" id="cc_b60">&mdash;</span></div>
+      <div class="line"><span class="k">80 lb bags</span><span class="v copyable" id="cc_b80">&mdash;</span></div>
+    </div>
+    <div class="hint">Includes waste. Bag yields: 60 lb &asymp; 0.45 cf, 80 lb &asymp; 0.60 cf. Order ready-mix by the yard above ~1 cy.</div>
+  </div>
+</section>
+
+<!-- AGGREGATE -->
+<section class="panel" data-tab="aggregate">
+  <div class="card">
+    <h2>Aggregate Fill</h2>
+    <div class="row">
+      <div class="field"><label>Length (ft)</label><input type="number" inputmode="decimal" id="ag_l"></div>
+      <div class="field"><label>Width (ft)</label><input type="number" inputmode="decimal" id="ag_w"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Depth (in)</label><input type="number" inputmode="decimal" id="ag_d" placeholder="4"></div>
+      <div class="field"><label>Material</label><select id="ag_mat"></select></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Waste %</label><input type="number" inputmode="decimal" id="ag_waste" value="10"></div>
+    </div>
+    <div class="out">
+      <div class="line big"><span class="k">Cubic yards</span><span class="v copyable" id="ag_cy">&mdash;</span></div>
+      <div class="line"><span class="k">Cubic feet</span><span class="v copyable" id="ag_cf">&mdash;</span></div>
+      <div class="line"><span class="k">Tons</span><span class="v copyable" id="ag_tons">&mdash;</span></div>
+    </div>
+    <div class="hint">Tons use typical compacted densities (lb/cy) and vary by source &amp; moisture. Confirm with your supplier before ordering.</div>
+  </div>
+</section>
+
+<!-- STAIRS -->
+<section class="panel" data-tab="stairs">
+  <div class="card">
+    <h2>Stair Layout</h2>
+    <div class="row">
+      <div class="field"><label>Total rise</label><input type="text" inputmode="text" id="st_rise" placeholder="9' 1&quot;" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+      <div class="field"><label>Target riser (in)</label><input type="number" inputmode="decimal" id="st_tr" value="7"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Tread depth (in)</label><input type="number" inputmode="decimal" id="st_td" value="10.5"></div>
+    </div>
+    <div class="out">
+      <div class="line big"><span class="k">Risers</span><span class="v copyable" id="st_n">&mdash;</span></div>
+      <div class="line"><span class="k">Riser height</span><span class="v copyable" id="st_rh">&mdash;</span></div>
+      <div class="line"><span class="k">Treads</span><span class="v copyable" id="st_t">&mdash;</span></div>
+      <div class="line"><span class="k">Total run</span><span class="v copyable" id="st_run">&mdash;</span></div>
+      <div class="line flag"><span class="k">Code check</span><span class="v" id="st_flag">&mdash;</span></div>
+    </div>
+    <div class="hint">Risers = total rise &divide; target, rounded. IRC residential: riser 4&ndash;7 3/4", tread &ge; 10". Total run = treads &times; tread depth.</div>
+  </div>
+</section>
+
+<!-- RAFTER -->
+<section class="panel" data-tab="rafter">
+  <div class="card">
+    <h2>Rafter / Roof Pitch</h2>
+    <div class="row">
+      <div class="field"><label>Run (ft)</label><input type="number" inputmode="decimal" id="rf_run" placeholder="12"></div>
+      <div class="field"><label>Pitch (rise / 12)</label><input type="number" inputmode="decimal" id="rf_pitch" value="6"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Overhang (in, optional)</label><input type="number" inputmode="decimal" id="rf_oh"></div>
+    </div>
+    <div class="out">
+      <div class="line big"><span class="k">Common rafter</span><span class="v copyable" id="rf_common">&mdash;</span></div>
+      <div class="line"><span class="k">Rise</span><span class="v copyable" id="rf_rise">&mdash;</span></div>
+      <div class="line"><span class="k">Slope angle</span><span class="v copyable" id="rf_angle">&mdash;</span></div>
+      <div class="line"><span class="k">Hip / valley</span><span class="v copyable" id="rf_hip">&mdash;</span></div>
+    </div>
+    <div class="hint">Run is the horizontal distance (usually half the span). Common rafter includes overhang when entered. Hip/valley is the diagonal across a square corner.</div>
+  </div>
+</section>
+
+<!-- TRIANGLE -->
+<section class="panel" data-tab="triangle">
+  <div class="card">
+    <h2>Right Triangle / Squaring</h2>
+    <label style="margin-bottom:8px">Enter any two sides &mdash; the third and the angle fill in. Accepts feet-inch.</label>
+    <div class="row">
+      <div class="field"><label>Side A (rise)</label><input type="text" inputmode="text" id="tr_a" placeholder="3'" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+      <div class="field"><label>Side B (run)</label><input type="text" inputmode="text" id="tr_b" placeholder="4'" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Diagonal C</label><input type="text" inputmode="text" id="tr_c" placeholder="5'" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    </div>
+    <div class="out">
+      <div class="line big"><span class="k">Diagonal C</span><span class="v copyable" id="tr_oc">&mdash;</span></div>
+      <div class="line"><span class="k">Side A</span><span class="v copyable" id="tr_oa">&mdash;</span></div>
+      <div class="line"><span class="k">Side B</span><span class="v copyable" id="tr_ob">&mdash;</span></div>
+      <div class="line"><span class="k">Angle at base</span><span class="v copyable" id="tr_ang">&mdash;</span></div>
+    </div>
+    <div class="hint">Diagonal = &radic;(A&sup2; + B&sup2;). Use to square a layout (3-4-5), find a brace/rafter length, or check a diagonal across a slab.</div>
+  </div>
+</section>
+
+<!-- STUDS -->
+<section class="panel" data-tab="studs">
+  <div class="card">
+    <h2>Stud &amp; Plate Framing</h2>
+    <div class="row">
+      <div class="field"><label>Wall length</label><input type="text" inputmode="text" id="fr_len" placeholder="24' 6&quot;" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+      <div class="field"><label>On-center (in)</label><input type="number" inputmode="decimal" id="fr_oc" value="16"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Plates (count)</label><input type="number" inputmode="decimal" id="fr_plates" value="3"></div>
+    </div>
+    <div class="out">
+      <div class="line big"><span class="k">Studs</span><span class="v copyable" id="fr_studs">&mdash;</span></div>
+      <div class="line"><span class="k">On-center</span><span class="v copyable" id="fr_oc_o">&mdash;</span></div>
+      <div class="line"><span class="k">Plate material</span><span class="v copyable" id="fr_plate">&mdash;</span></div>
+      <div class="line"><span class="k">Wall length</span><span class="v copyable" id="fr_wall">&mdash;</span></div>
+    </div>
+    <div class="hint">One stud per on-center plus one end stud. Add studs for each corner, opening, and partition intersection. Plates default to 3 (single bottom + double top).</div>
+  </div>
+</section>
+
+<!-- SPACING -->
+<section class="panel" data-tab="spacing">
+  <div class="card">
+    <h2>Spacing / Equal Divisions</h2>
+    <div class="row">
+      <div class="field"><label>Span (total)</label><input type="text" inputmode="text" id="sp_span" placeholder="12' 4&quot;" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Divide into spaces</label><input type="number" inputmode="decimal" id="sp_n" placeholder="e.g. 7"></div>
+      <div class="field"><label>Or max spacing</label><input type="text" inputmode="text" id="sp_max" placeholder="4&quot;" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    </div>
+    <div class="out">
+      <div class="line big"><span class="k">On-center spacing</span><span class="v copyable" id="sp_oc">&mdash;</span></div>
+      <div class="line"><span class="k">Spaces</span><span class="v copyable" id="sp_spaces">&mdash;</span></div>
+      <div class="line"><span class="k">Interior marks</span><span class="v copyable" id="sp_marksn">&mdash;</span></div>
+    </div>
+    <div class="marklist" id="sp_marks"></div>
+    <div class="hint">Enter a number of spaces, or a max spacing and it finds the fewest equal spaces that stay under it. Marks are measured from one end. Great for balusters, fixtures, fasteners, joists, posts.</div>
+  </div>
+</section>
+
+<!-- BOARD FEET -->
+<section class="panel" data-tab="board">
+  <div class="card">
+    <h2>Board Feet</h2>
+    <div class="row">
+      <div class="field"><label>Thickness (in)</label><input type="number" inputmode="decimal" id="bf_t" placeholder="1.5"></div>
+      <div class="field"><label>Width (in)</label><input type="number" inputmode="decimal" id="bf_w" placeholder="5.5"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Length (ft)</label><input type="number" inputmode="decimal" id="bf_l"></div>
+      <div class="field"><label>Quantity</label><input type="number" inputmode="decimal" id="bf_q" value="1"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>$ / board ft (optional)</label><input type="number" inputmode="decimal" id="bf_p"></div>
+    </div>
+    <div class="out">
+      <div class="line big"><span class="k">Board feet</span><span class="v copyable" id="bf_bf">&mdash;</span></div>
+      <div class="line"><span class="k">Linear feet</span><span class="v copyable" id="bf_lf">&mdash;</span></div>
+      <div class="line"><span class="k">Cost</span><span class="v copyable" id="bf_cost">&mdash;</span></div>
+    </div>
+    <div class="hint">Board feet = thickness(in) &times; width(in) &times; length(ft) &divide; 12, &times; quantity.</div>
+  </div>
+</section>
+
+<!-- TAKEOFF -->
+<section class="panel" data-tab="takeoff">
+  <div class="card">
+    <h2>Material Takeoff</h2>
+    <div class="seg" id="tk_seg">
+      <button data-mode="drywall" class="active">Drywall</button>
+      <button data-mode="paint">Paint</button>
+      <button data-mode="floor">Flooring</button>
+    </div>
+
+    <div id="tk_drywall">
+      <div class="row">
+        <div class="field"><label>Wall+ceiling area (sf)</label><input type="number" inputmode="decimal" id="td_area"></div>
+        <div class="field"><label>Openings (sf)</label><input type="number" inputmode="decimal" id="td_open" value="0"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Sheet size</label>
+          <select id="td_sheet"><option value="32">4&times;8 (32 sf)</option><option value="36">4&times;9 (36 sf)</option><option value="40">4&times;10 (40 sf)</option><option value="48">4&times;12 (48 sf)</option></select>
+        </div>
+        <div class="field"><label>Waste %</label><input type="number" inputmode="decimal" id="td_waste" value="10"></div>
+      </div>
+      <div class="out">
+        <div class="line big"><span class="k">Sheets</span><span class="v copyable" id="td_sheets">&mdash;</span></div>
+        <div class="line"><span class="k">Net area</span><span class="v copyable" id="td_net">&mdash;</span></div>
+        <div class="line"><span class="k">Screws (approx)</span><span class="v copyable" id="td_screws">&mdash;</span></div>
+        <div class="line"><span class="k">Joint compound</span><span class="v copyable" id="td_mud">&mdash;</span></div>
+      </div>
+    </div>
+
+    <div id="tk_paint" style="display:none">
+      <div class="row">
+        <div class="field"><label>Surface area (sf)</label><input type="number" inputmode="decimal" id="tp_area"></div>
+        <div class="field"><label>Openings (sf)</label><input type="number" inputmode="decimal" id="tp_open" value="0"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Coats</label><input type="number" inputmode="decimal" id="tp_coats" value="2"></div>
+        <div class="field"><label>Coverage (sf/gal)</label><input type="number" inputmode="decimal" id="tp_cov" value="350"></div>
+      </div>
+      <div class="out">
+        <div class="line big"><span class="k">Gallons</span><span class="v copyable" id="tp_gal">&mdash;</span></div>
+        <div class="line"><span class="k">Net area</span><span class="v copyable" id="tp_net">&mdash;</span></div>
+      </div>
+    </div>
+
+    <div id="tk_floor" style="display:none">
+      <div class="row">
+        <div class="field"><label>Floor area (sf)</label><input type="number" inputmode="decimal" id="tf_area"></div>
+        <div class="field"><label>Waste %</label><input type="number" inputmode="decimal" id="tf_waste" value="10"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Box coverage (sf, optional)</label><input type="number" inputmode="decimal" id="tf_box"></div>
+      </div>
+      <div class="out">
+        <div class="line big"><span class="k">Area + waste</span><span class="v copyable" id="tf_net">&mdash;</span></div>
+        <div class="line"><span class="k">Boxes needed</span><span class="v copyable" id="tf_boxes">&mdash;</span></div>
+      </div>
+    </div>
+    <div class="hint">Quick field takeoffs. Screws &asymp; 32/sheet at 16" OC; joint compound &asymp; 1 gal / 100 sf. Verify against the spec.</div>
+  </div>
+</section>
+
+<!-- CONVERT -->
+<section class="panel" data-tab="convert">
+  <div class="card">
+    <h2>Quick Convert</h2>
+    <div class="row">
+      <div class="field"><label>Value</label><input type="number" inputmode="decimal" id="cv_val"></div>
+      <div class="field"><label>From</label>
+        <select id="cv_from"></select>
+      </div>
+      <div class="field"><label>To</label>
+        <select id="cv_to"></select>
+      </div>
+    </div>
+    <div class="out">
+      <div class="line big"><span class="k">Result</span><span class="v copyable" id="cv_out">&mdash;</span></div>
+    </div>
+    <div class="hint">Length, area, and volume groups. Converting across groups is blocked.</div>
+  </div>
+</section>
+
+</main>
+<footer>Field Calc &middot; Estimates only &middot; Verify before you commit</footer>
+<div class="toast" id="toast">Copied</div>
+
+<script>
+// ---- clock ----
+function tick(){const d=new Date();document.getElementById('clock').textContent=d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+tick();setInterval(tick,15000);
+
+const num=id=>{const v=parseFloat(document.getElementById(id).value);return isNaN(v)?0:v;};
+const money=n=>'$'+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const set=(id,v)=>document.getElementById(id).textContent=v;
+
+// ---- tabs ----
+const tabs=[['tape','Tape'],['slope','Slope'],['area','Area'],['concrete','Concrete'],['aggregate','Aggregate'],['stairs','Stairs'],['rafter','Rafter'],['triangle','Triangle'],['studs','Studs'],['spacing','Spacing'],['board','Board Ft'],['takeoff','Takeoff'],['convert','Convert']];
+const nav=document.getElementById('nav');
+tabs.forEach(t=>{const b=document.createElement('button');b.textContent=t[1];b.dataset.tab=t[0];b.onclick=()=>show(t[0]);nav.appendChild(b);});
+function show(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.dataset.tab===id));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+  const act=document.querySelector('nav button.active');if(act)act.scrollIntoView({inline:'center',block:'nearest'});
+  window.scrollTo(0,0);
+  saveState();
+}
+
+// ---- area ----
+function calcArea(){
+  const l=num('a_l'),w=num('a_w'),cov=num('a_cov'),waste=num('a_waste');
+  if(!l||!w){set('a_sf','—');set('a_sfw','—');set('a_sq','—');set('a_units','—');return;}
+  const sf=l*w, sfw=sf*(1+waste/100);
+  set('a_sf',sf.toFixed(1)+' sf');
+  set('a_sfw',sfw.toFixed(1)+' sf');
+  set('a_sq',(sfw/100).toFixed(2));
+  set('a_units',cov?Math.ceil(sfw/cov)+' units':'—');
+}
+
+// ---- concrete ----
+const ccSeg=document.getElementById('cc_seg');
+ccSeg.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  ccSeg.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  const m=b.dataset.mode;
+  document.getElementById('cc_slab').style.display=m==='slab'?'block':'none';
+  document.getElementById('cc_column').style.display=m==='column'?'block':'none';
+  calcConcrete();saveState();
+});
+function calcConcrete(){
+  const mode=ccSeg.querySelector('button.active').dataset.mode;
+  const waste=num('cc_waste');
+  let cf=0,ready=false;
+  if(mode==='slab'){
+    const l=num('cc_l'),w=num('cc_w'),t=num('cc_t'),q=num('cc_qty')||1;
+    if(l&&w&&t){cf=l*w*(t/12)*q;ready=true;}
+  } else {
+    const dia=num('cc_dia'),h=num('cc_h'),q=num('cc_cqty')||1;
+    if(dia&&h){const r=dia/12/2;cf=Math.PI*r*r*h*q;ready=true;}
+  }
+  if(!ready){set('cc_cy','—');set('cc_cf','—');set('cc_b60','—');set('cc_b80','—');return;}
+  cf=cf*(1+waste/100);
+  set('cc_cy',(cf/27).toFixed(2)+' cy');
+  set('cc_cf',cf.toFixed(1)+' cf');
+  set('cc_b60',Math.ceil(cf/0.45)+' bags');
+  set('cc_b80',Math.ceil(cf/0.60)+' bags');
+}
+
+// ---- aggregate ----
+const DENS={'Gravel':2800,'Sand':2600,'Crushed stone':2700,'Road base':3000,'Topsoil':2100,'Mulch':800};
+(function(){let h='';for(const k in DENS)h+='<option>'+k+'</option>';document.getElementById('ag_mat').innerHTML=h;})();
+function calcAgg(){
+  const l=num('ag_l'),w=num('ag_w'),d=num('ag_d'),waste=num('ag_waste');
+  const mat=document.getElementById('ag_mat').value;
+  if(!l||!w||!d){set('ag_cy','—');set('ag_cf','—');set('ag_tons','—');return;}
+  const cf=l*w*(d/12)*(1+waste/100);
+  const cy=cf/27, tons=cy*(DENS[mat]||2700)/2000;
+  set('ag_cy',cy.toFixed(2)+' cy');
+  set('ag_cf',cf.toFixed(1)+' cf');
+  set('ag_tons',(Math.round(tons*100)/100)+' tons');
+}
+
+// ---- stairs ----
+function calcStairs(){
+  const rise=parseDim(document.getElementById('st_rise').value);
+  const target=num('st_tr')||7, td=num('st_td')||10.5;
+  if(rise===null||rise<=0){set('st_n','—');set('st_rh','—');set('st_t','—');set('st_run','—');set('st_flag','—');return;}
+  const n=Math.max(1,Math.round(rise/target));
+  const rh=rise/n, treads=n-1, run=treads*td;
+  set('st_n',n);
+  set('st_rh',fmtDim(rh)+' ('+(Math.round(rh*100)/100)+'")');
+  set('st_t',treads);
+  set('st_run',fmtDim(run));
+  const okRiser=rh>=4&&rh<=7.75, okTread=td>=10;
+  const el=document.getElementById('st_flag');
+  if(okRiser&&okTread){el.textContent='OK · IRC';el.className='v ok';}
+  else{
+    let msg=[];
+    if(!okRiser)msg.push('riser '+(Math.round(rh*100)/100)+'" out of 4–7¾"');
+    if(!okTread)msg.push('tread < 10"');
+    el.textContent=msg.join(' · ');el.className='v bad';
+  }
+}
+
+// ---- rafter ----
+function calcRafter(){
+  const run=num('rf_run'),p=num('rf_pitch'),oh=num('rf_oh');
+  if(!run||!p){set('rf_common','—');set('rf_rise','—');set('rf_angle','—');set('rf_hip','—');return;}
+  const slope=p/12, factor=Math.sqrt(1+slope*slope), riseFt=run*slope;
+  let common=run*factor;
+  if(oh) common+=(oh/12)*factor;
+  const angle=Math.atan(slope)*180/Math.PI;
+  const hip=Math.sqrt(2*run*run+riseFt*riseFt);
+  set('rf_common',fmtDim(common*12));
+  set('rf_rise',fmtDim(riseFt*12));
+  set('rf_angle',(Math.round(angle*100)/100)+'°');
+  set('rf_hip',fmtDim(hip*12));
+}
+
+// ---- right triangle ----
+function calcTriangle(){
+  let a=parseDim(document.getElementById('tr_a').value);
+  let b=parseDim(document.getElementById('tr_b').value);
+  let c=parseDim(document.getElementById('tr_c').value);
+  const ga=a!==null&&a>0, gb=b!==null&&b>0, gc=c!==null&&c>0;
+  let A=null,B=null,C=null;
+  if(ga&&gb){A=a;B=b;C=Math.sqrt(a*a+b*b);}
+  else if(ga&&gc&&c>a){A=a;C=c;B=Math.sqrt(c*c-a*a);}
+  else if(gb&&gc&&c>b){B=b;C=c;A=Math.sqrt(c*c-b*b);}
+  if(A===null){set('tr_oc','—');set('tr_oa','—');set('tr_ob','—');set('tr_ang','—');return;}
+  set('tr_oc',fmtDim(C));set('tr_oa',fmtDim(A));set('tr_ob',fmtDim(B));
+  set('tr_ang',(Math.round(Math.atan2(A,B)*180/Math.PI*100)/100)+'°');
+}
+
+// ---- studs ----
+function calcStuds(){
+  const len=parseDim(document.getElementById('fr_len').value);
+  const oc=num('fr_oc')||16, plates=num('fr_plates')||0;
+  if(len===null||len<=0){set('fr_studs','—');set('fr_oc_o','—');set('fr_plate','—');set('fr_wall','—');return;}
+  const studs=Math.ceil(len/oc)+1;
+  set('fr_studs',studs+' studs');
+  set('fr_oc_o',oc+'" OC');
+  set('fr_plate',(Math.round((len/12)*plates*10)/10)+' lf');
+  set('fr_wall',fmtDim(len));
+}
+
+// ---- spacing ----
+function calcSpacing(){
+  const span=parseDim(document.getElementById('sp_span').value);
+  const nRaw=document.getElementById('sp_n').value.trim();
+  const maxRaw=document.getElementById('sp_max').value.trim();
+  const marks=document.getElementById('sp_marks');
+  const clear=()=>{set('sp_oc','—');set('sp_spaces','—');set('sp_marksn','—');marks.innerHTML='';};
+  if(span===null||span<=0){clear();return;}
+  let gaps=0;
+  if(nRaw!==''){gaps=Math.max(1,Math.round(parseFloat(nRaw)||0));}
+  else if(maxRaw!==''){const m=parseDim(maxRaw);if(m&&m>0)gaps=Math.ceil(span/m);}
+  if(!gaps){clear();return;}
+  const spacing=span/gaps;
+  set('sp_oc',fmtDim(spacing));
+  set('sp_spaces',gaps);
+  const n=gaps-1;
+  set('sp_marksn',n);
+  marks.innerHTML='';
+  if(n>0&&n<=80){let h='';for(let i=1;i<=n;i++)h+='<span>'+fmtDim(spacing*i)+'</span>';marks.innerHTML=h;}
+  else if(n>80){marks.innerHTML='<span>'+n+' marks — too many to list</span>';}
+}
+
+// ---- board feet ----
+function calcBoard(){
+  const t=num('bf_t'),w=num('bf_w'),l=num('bf_l'),q=num('bf_q')||1,p=num('bf_p');
+  if(!t||!w||!l){set('bf_bf','—');set('bf_lf','—');set('bf_cost','—');return;}
+  const bf=t*w*l/12*q, lf=l*q;
+  set('bf_bf',(Math.round(bf*100)/100)+' bf');
+  set('bf_lf',(Math.round(lf*100)/100)+' lf');
+  set('bf_cost',p?money(bf*p):'—');
+}
+
+// ---- takeoff ----
+const tkSeg=document.getElementById('tk_seg');
+tkSeg.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  tkSeg.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  const m=b.dataset.mode;
+  document.getElementById('tk_drywall').style.display=m==='drywall'?'block':'none';
+  document.getElementById('tk_paint').style.display=m==='paint'?'block':'none';
+  document.getElementById('tk_floor').style.display=m==='floor'?'block':'none';
+  calcTakeoff();saveState();
+});
+function calcTakeoff(){
+  const mode=tkSeg.querySelector('button.active').dataset.mode;
+  if(mode==='drywall'){
+    const area=num('td_area'),open=num('td_open'),sheet=num('td_sheet')||32,waste=num('td_waste');
+    if(!area){set('td_sheets','—');set('td_net','—');set('td_screws','—');set('td_mud','—');return;}
+    const net=Math.max(0,area-open)*(1+waste/100), sheets=Math.ceil(net/sheet);
+    set('td_sheets',sheets+' sheets');set('td_net',net.toFixed(1)+' sf');
+    set('td_screws',(sheets*32)+' screws');set('td_mud',Math.ceil(net/100)+' gal');
+  } else if(mode==='paint'){
+    const area=num('tp_area'),open=num('tp_open'),coats=num('tp_coats')||1,cov=num('tp_cov')||350;
+    if(!area){set('tp_gal','—');set('tp_net','—');return;}
+    const net=Math.max(0,area-open);
+    set('tp_gal',Math.ceil(net*coats/cov)+' gal');set('tp_net',net.toFixed(1)+' sf');
+  } else {
+    const area=num('tf_area'),waste=num('tf_waste'),box=num('tf_box');
+    if(!area){set('tf_net','—');set('tf_boxes','—');return;}
+    const net=area*(1+waste/100);
+    set('tf_net',net.toFixed(1)+' sf');set('tf_boxes',box?Math.ceil(net/box)+' boxes':'—');
+  }
+}
+
+// ---- slope / grade ----
+function fmtPitch(pct){return (Math.round(pct/100*12*100)/100)+' / 12';}
+function renderSlope(pct){
+  if(pct===null||!isFinite(pct)){set('sl_o_pct','—');set('sl_o_ratio','—');set('sl_o_deg','—');set('sl_o_pitch','—');return;}
+  set('sl_o_pct',(Math.round(pct*1000)/1000)+'%');
+  set('sl_o_ratio', pct===0?'flat':'1 : '+(Math.round((100/pct)*100)/100));
+  set('sl_o_deg',(Math.round(Math.atan(pct/100)*180/Math.PI*100)/100)+'°');
+  set('sl_o_pitch',fmtPitch(pct));
+}
+let slopeLock=null;
+function calcSlope(src){
+  if(src) slopeLock=src;
+  const riseRaw=document.getElementById('sl_rise').value.trim();
+  const runRaw=document.getElementById('sl_run').value.trim();
+  const pctRaw=document.getElementById('sl_pct').value.trim();
+  if(slopeLock==='pct' && pctRaw!==''){const p=parseFloat(pctRaw);renderSlope(isNaN(p)?null:p);return;}
+  const rise=parseDim(riseRaw), run=parseDim(runRaw);
+  if(rise!==null && run){
+    const pct=rise/run*100;
+    document.getElementById('sl_pct').value=Math.round(pct*1000)/1000;
+    renderSlope(pct);
+  } else if(pctRaw!==''){const p=parseFloat(pctRaw);renderSlope(isNaN(p)?null:p);}
+  else {renderSlope(null);}
+}
+document.getElementById('sl_rise').addEventListener('input',()=>calcSlope('rr'));
+document.getElementById('sl_run').addEventListener('input',()=>calcSlope('rr'));
+document.getElementById('sl_pct').addEventListener('input',()=>calcSlope('pct'));
+
+// ---- convert ----
+const units={
+  Length:{ft:1,in:1/12,yd:3,m:3.28084,cm:0.0328084,mm:0.00328084},
+  Area:{sf:1,'sq in':1/144,'sq yd':9,'sq m':10.7639,acre:43560},
+  Volume:{cf:1,'cu yd':27,gal:0.133681,'cu m':35.3147,'cu in':1/1728}
+};
+const cvFrom=document.getElementById('cv_from'),cvTo=document.getElementById('cv_to');
+function groupOf(u){for(const g in units)if(u in units[g])return g;}
+function fillUnits(){
+  let html='';
+  for(const g in units){html+='<optgroup label="'+g+'">';for(const u in units[g])html+='<option>'+u+'</option>';html+='</optgroup>';}
+  cvFrom.innerHTML=html;cvTo.innerHTML=html;cvFrom.value='ft';cvTo.value='in';
+}
+fillUnits();
+function calcConvert(){
+  const val=num('cv_val'),f=cvFrom.value,t=cvTo.value;
+  if(groupOf(f)!==groupOf(t)){set('cv_out','unit mismatch');return;}
+  if(!document.getElementById('cv_val').value){set('cv_out','—');return;}
+  const g=groupOf(f);
+  set('cv_out',(val*units[g][f]/units[g][t]).toLocaleString(undefined,{maximumFractionDigits:4})+' '+t);
+}
+
+// ---- feet-inch tape ----
+function parseDim(raw){
+  if(raw==null) return null;
+  let s=(''+raw).trim().toLowerCase().replace(/[”"″]/g,'"').replace(/[’']/g,"'");
+  if(!s) return null;
+  if(s==='.'||s==='-') return null;
+  let inches=0, matched=false;
+  const ftMatch=s.match(/(-?\d*\.?\d+)\s*'/);
+  if(ftMatch){inches+=parseFloat(ftMatch[1])*12;matched=true;s=s.replace(ftMatch[0],' ');}
+  s=s.replace(/"/g,' ').trim();
+  if(s){
+    const fr=s.match(/(-?\d+)?\s+(\d+)\s*\/\s*(\d+)/) || s.match(/^(\d+)\s*\/\s*(\d+)$/);
+    if(fr){
+      if(fr.length===4){const whole=fr[1]?parseFloat(fr[1]):0;inches+=whole+parseFloat(fr[2])/parseFloat(fr[3]);}
+      else{inches+=parseFloat(fr[1])/parseFloat(fr[2]);}
+      matched=true;
+    } else {const dec=s.match(/-?\d*\.?\d+/);if(dec){inches+=parseFloat(dec[0]);matched=true;}}
+  }
+  return matched?inches:null;
+}
+function fmtDim(totalIn){
+  const neg=totalIn<0; let t=Math.abs(totalIn);
+  let sixteenths=Math.round(t*16);
+  let ft=Math.floor(sixteenths/(16*12));
+  let rem=sixteenths-ft*16*12;
+  let inch=Math.floor(rem/16);
+  let frac=rem-inch*16;
+  let n=frac, d=16;
+  while(n>0 && n%2===0){n/=2;d/=2;}
+  let parts=[];
+  if(ft) parts.push(ft+"'");
+  let inStr='';
+  if(inch||(!ft&&n===0)) inStr+=inch;
+  if(n>0) inStr+=(inch?' ':'')+n+'/'+d;
+  if(inStr) parts.push(inStr+'"');
+  if(parts.length===0) parts.push('0"');
+  return (neg?'-':'')+parts.join(' ');
+}
+const fmtFt=totalIn=>(totalIn/12).toFixed(3)+"'";
+
+let tape=[];
+function tapeValue(){
+  let v=0;
+  tape.forEach(e=>{
+    if(e.op==='+') v+=e.inches;
+    else if(e.op==='-') v-=e.inches;
+    else if(e.op==='*') v*=e.scalar;
+    else if(e.op==='/') v=e.scalar?v/e.scalar:v;
+  });
+  return v;
+}
+function renderTape(){
+  const val=tapeValue();
+  document.getElementById('tp_running').textContent=fmtDim(val);
+  document.getElementById('tp_sub').textContent=fmtDim(val)+'  ·  '+fmtFt(val)+'  ·  '+(Math.round(val*16)/16)+'"';
+  const log=document.getElementById('tp_log');
+  log.innerHTML='';
+  tape.forEach(e=>{
+    const div=document.createElement('div');div.className='entry';
+    const opSym={'+':'+','-':'−','*':'×','/':'÷'}[e.op];
+    const amt=e.isScalar?e.scalar:fmtDim(e.inches)+' <span class="sub">('+fmtFt(e.inches)+')</span>';
+    div.innerHTML='<span class="op">'+opSym+'</span><span class="amt">'+amt+'</span>';
+    log.appendChild(div);
+  });
+  log.scrollTop=log.scrollHeight;
+}
+function tapeOp(op){
+  const entry=document.getElementById('tp_entry');
+  if(op==='C'){tape=[];entry.value='';renderTape();saveState();return;}
+  if(op==='back'){tape.pop();renderTape();saveState();return;}
+  const raw=entry.value.trim();
+  if(op==='*'||op==='/'){
+    const sc=parseFloat(raw);
+    if(isNaN(sc)) return;
+    if(tape.length===0){tape.push({op:'+',inches:0});}
+    tape.push({op,isScalar:true,scalar:sc});
+  } else {
+    const inches=parseDim(raw);
+    if(inches===null) return;
+    tape.push({op,inches});
+  }
+  entry.value='';renderTape();saveState();
+}
+document.querySelectorAll('.tape-ops button').forEach(b=>b.onclick=()=>tapeOp(b.dataset.op));
+document.getElementById('tp_entry').addEventListener('keydown',e=>{if(e.key==='Enter')tapeOp('+');});
+
+// ---- decimal -> fraction ----
+function calcDF(){
+  const raw=document.getElementById('df_val').value;
+  if(raw===''){set('df_out','—');set('df_in','—');return;}
+  const v=parseFloat(raw);if(isNaN(v)){set('df_out','—');set('df_in','—');return;}
+  const inches=document.getElementById('df_unit').value==='ft'?v*12:v;
+  set('df_out',fmtDim(inches));
+  set('df_in',(Math.round(inches*16)/16)+'"');
+}
+
+// ---- recalc all ----
+function recalcAll(){calcArea();calcConcrete();calcAgg();calcStairs();calcRafter();calcTriangle();calcStuds();calcSpacing();calcBoard();calcTakeoff();calcConvert();calcDF();calcSlope();}
+
+// ---- copy to clipboard ----
+let toastT=null;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),1100);}
+document.addEventListener('click',e=>{
+  const el=e.target.closest('.copyable');if(!el)return;
+  const txt=el.textContent.trim();
+  if(!txt||txt==='—')return;
+  const done=()=>toast('Copied  '+txt);
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>done());}
+  else{try{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();done();}catch(_){}}
+});
+
+// ---- theme ----
+function setTheme(t){
+  const m=document.querySelector('meta[name=theme-color]');
+  if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');document.getElementById('theme_btn').innerHTML='&#9728;';if(m)m.setAttribute('content','#1b1b1f');}
+  else{document.documentElement.removeAttribute('data-theme');document.getElementById('theme_btn').innerHTML='&#9790;';if(m)m.setAttribute('content','#303038');}
+}
+document.getElementById('theme_btn').onclick=()=>{
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  setTheme(dark?'light':'dark');saveState();
+};
+
+// ---- persistence ----
+function activeSeg(segId){const b=document.querySelector('#'+segId+' button.active');return b?b.dataset.mode:null;}
+function saveState(){
+  try{
+    const v={};document.querySelectorAll('main input, main select').forEach(el=>{if(el.id)v[el.id]=el.value;});
+    const act=document.querySelector('nav button.active');
+    localStorage.setItem('fieldcalc',JSON.stringify({
+      v, tab:act?act.dataset.tab:'tape',
+      cc:activeSeg('cc_seg'), tk:activeSeg('tk_seg'),
+      tape, theme:document.documentElement.getAttribute('data-theme')||''
+    }));
+  }catch(e){}
+}
+function loadState(){
+  try{
+    const s=JSON.parse(localStorage.getItem('fieldcalc')||'null');
+    if(!s)return null;
+    if(s.v){for(const id in s.v){const el=document.getElementById(id);if(el)el.value=s.v[id];}}
+    if(Array.isArray(s.tape))tape=s.tape;
+    return s;
+  }catch(e){return null;}
+}
+
+// ---- init ----
+const saved=loadState();
+setTheme(saved&&saved.theme==='dark'?'dark':'light');
+if(saved&&saved.cc){const b=document.querySelector('#cc_seg button[data-mode="'+saved.cc+'"]');if(b)b.click();}
+if(saved&&saved.tk){const b=document.querySelector('#tk_seg button[data-mode="'+saved.tk+'"]');if(b)b.click();}
+show(saved&&saved.tab?saved.tab:'tape');
+renderTape();
+recalcAll();
+
+document.addEventListener('input',()=>{recalcAll();saveState();});
+document.addEventListener('change',()=>{recalcAll();saveState();});
+
+// ---- service worker (PWA, no-op on file://) ----
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});}
+</script>
+</body>
+</html>
